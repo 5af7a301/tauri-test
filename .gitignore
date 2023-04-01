@@ -1,0 +1,16 @@
+# general
+**/.vscode/
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+**/.env
+**/yarn.lock
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+
+# tauri-app
+/tauri-app/**/src-tauri/target/
+/tauri-app/**/Cargo.lock
