@@ -111,11 +111,14 @@ jobs:
         with:
           path: ./tauri-app/ubuntu-artifacts
           key: ubuntu-artifacts-cache
+
+      - name: Get tag name
+        run: echo "TAG=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Test release
+          name: $TAG
           files: |
             ./tauri-app/windows-artifacts/*
             ./tauri-app/ubuntu-artifacts/*
