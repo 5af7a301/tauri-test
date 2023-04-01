@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: yarn tauri build
 
-      - name: Creats artifacts folder
+      - name: Create artifacts folder
         shell: pwsh
         run: New-Item -Path "windows-artifacts" -ItemType Directory
       
@@ -43,6 +43,10 @@ jobs:
       - name: Move installer artifact to the artifacts folder
         shell: pwsh
         run: Move-Item -Path "./src-tauri/target/release/bundle/msi/*.msi" -Destination windows-artifacts
+
+      - name: Sanity check
+        shell: pwsh
+        run: dir windows-artifacts
 
       - name: Cache artifacts
         uses: actions/cache@v3
@@ -119,7 +123,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          name: $TAG
+          name: ${{ TAG }}
           files: |
             ./tauri-app/windows-artifacts/*
             ./tauri-app/ubuntu-artifacts/*
