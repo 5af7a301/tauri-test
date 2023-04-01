@@ -12,6 +12,9 @@ jobs:
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
 
+    defaults:
+      run:
+        working-directory: ./tauri-app
     steps:
       - uses: actions/checkout@v3
       - name: setup node
