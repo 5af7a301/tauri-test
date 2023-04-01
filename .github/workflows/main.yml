@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-        run: yarn install
+          yarn install
       
       - name: Build
         run: yarn tauri build
@@ -80,9 +80,10 @@ jobs:
         run: yarn tauri build
 
       - name: Move generated artifacts to artifacts folder
-        run: mkdir ubuntu-artifacts
-        run: mv ./src-tauri/target/release/bundle/appimage/*.AppImage ./ubuntu-artifacts
-        run: mv ./src-tauri/target/release/bundle/deb/*.deb ./ubuntu-artifacts
+      run: |
+        mkdir ubuntu-artifacts
+        mv ./src-tauri/target/release/bundle/appimage/*.AppImage ./ubuntu-artifacts
+        mv ./src-tauri/target/release/bundle/deb/*.deb ./ubuntu-artifacts
 
       - name: Cache artifacts
         uses: actions/cache@v3
