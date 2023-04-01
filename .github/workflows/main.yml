@@ -100,33 +100,22 @@ jobs:
       contents: write
     
     steps:
-      # Restores artifacts from Windows build
       - name: Restore Windows artifacts
-        id: windows-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache@v3
         with:
           path: ./tauri-app/windows-artifacts
           key: windows-artifacts-cache
-      - name: Save restores Windows artifacts
-        uses: actions/cache/save@v3
-        with:
-          path: ./windows-artifacts
-          key: ${{ steps.windows-restore.outputs.cache-primary-key }}
 
-      # Restores artifacts from Ubuntu build
       - name: Restore Ubuntu artifacts
-        id: ubuntu-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache@v3
         with:
           path: ./tauri-app/ubuntu-artifacts
           key: ubuntu-artifacts-cache
-      - name: Save restores Ubuntu artifacts
-        uses: actions/cache/save@v3
+     
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          path: ./ubuntu-artifacts
-          key: ${{ steps.ubuntu-restore.outputs.cache-primary-key }}
-      
-      # Creates a release
-      # TODO create release with assets
-      - name: Test
-        run: ls -lha
+          name: Test release
+          files: |
+            ./tauri-app/windows-artifacts/*
+            ./tauri-app/ubuntu-artifacts/*
