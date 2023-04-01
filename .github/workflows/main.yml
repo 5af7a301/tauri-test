@@ -105,7 +105,7 @@ jobs:
         id: windows-restore
         uses: actions/cache/restore@v3
         with:
-          path: ./windows-artifacts
+          path: ./tauri-app/windows-artifacts
           key: windows-artifacts-cache
       - name: Save restores Windows artifacts
         uses: actions/cache/save@v3
@@ -118,7 +118,7 @@ jobs:
         id: ubuntu-restore
         uses: actions/cache/restore@v3
         with:
-          path: ./ubuntu-artifacts
+          path: ./tauri-app/ubuntu-artifacts
           key: ubuntu-artifacts-cache
       - name: Save restores Ubuntu artifacts
         uses: actions/cache/save@v3
