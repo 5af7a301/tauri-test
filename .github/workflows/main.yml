@@ -46,7 +46,7 @@ jobs:
       - name: Cache artifacts
         uses: actions/cache@v3
         with:
-          path: ./windows-artifacts
+          path: ./tauri-app/windows-artifacts
           key: windows-artifacts-cache
 
 
@@ -88,7 +88,7 @@ jobs:
       - name: Cache artifacts
         uses: actions/cache@v3
         with:
-          path: ./ubuntu-artifacts
+          path: ./tauri-app/ubuntu-artifacts
           key: ubuntu-artifacts-cache
 
 
