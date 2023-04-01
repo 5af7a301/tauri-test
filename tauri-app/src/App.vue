@@ -32,9 +32,7 @@ import Greet from "./components/Greet.vue";
         >Tauri</a
       >
       +
-      <a href="https://github.com/rust-lang/rust-analyzer" target="_blank"
-        >rust-analyzer</a
-      >
+      <a href="https://github.com/rust-lang/rust-analyzer" target="_blank">rust-analyzer</a>
     </p>
 
     <Greet />
