@@ -1,100 +1,131 @@
-name: Action test
+name: Release
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  create-release:
+  # Builds for Windows and caches it's artifacts
+  build-windows:
+    runs-on: windows-latest
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
-    outputs:
-      release_id: ${{ steps.create-release.outputs.result }}
-
     defaults:
       run:
         working-directory: ./tauri-app
     steps:
-      - uses: actions/checkout@v3
-      - name: setup node
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Node setup
         uses: actions/setup-node@v3
         with:
-          node-version: 16
-      - name: get version
-        run: echo "PACKAGE_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
-      - name: create release
-        id: create-release
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { data } = await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: `app-v${process.env.PACKAGE_VERSION}`,
-              name: `Desktop App v${process.env.PACKAGE_VERSION}`,
-              body: 'Take a look at the assets to download and install this app.',
-              draft: true,
-              prerelease: false
-            })
-            return data.id
+          node-version: 18
+      
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@v1
 
-  build-tauri:
-    needs: create-release
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ubuntu-20.04, windows-latest]
-
-    runs-on: ${{ matrix.platform }}
-    defaults:
-      run:
-        working-directory: ./tauri-app
-    steps:
-      - uses: actions/checkout@v3
-      - name: setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-      - name: install frontend dependencies
-        run: yarn install # change this to npm or pnpm depending on which one you use
+        run: yarn install
+      
+      - name: Build
+        run: yarn tauri build
 
-      - name: typescript
-        run: yarn global add typescript
+      - name: Creats artifacts folder
+        shell: pwsh
+        run: New-Item -Path "windows-artifacts" -ItemType Directory
+      
+      - name: Create portable artifact in the artifacts folder
+        shell: pwsh
+        run: ../.github/scripts/windows/desktop-portable-zip.ps1 windows-artifacts
 
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Move installer artifact to the artifacts folder
+        shell: pwsh
+        run: Move-Item -Path "./src-tauri/target/release/bundle/msi/*.msi" -Destination windows-artifacts
+
+      - name: Cache artifacts
+        uses: actions/cache@v3
         with:
-          releaseId: ${{ needs.create-release.outputs.release_id }}
+          path: ./windows-artifacts
+          key: windows-artifacts-cache
 
-  publish-release:
+
+  # Builds for Ubuntu and caches it's artifacts
+  build-ubuntu:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-20.04
-    needs: [create-release, build-tauri]
-
+    defaults:
+      run:
+        working-directory: ./tauri-app
     steps:
-      - name: publish release
-        id: publish-release
-        uses: actions/github-script@v6
-        env:
-          release_id: ${{ needs.create-release.outputs.release_id }}
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Node setup
+        uses: actions/setup-node@v3
         with:
-          script: |
-            github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: process.env.release_id,
-              draft: false,
-              prerelease: false
-            })
+          node-version: 18
+      
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@v1
+
+      - name: Install dependencies
+        run: yarn install
+      
+      - name: Build
+        run: yarn tauri build
+
+      - name: Move generated artifacts to artifacts folder
+        run: mkdir ubuntu-artifacts
+        run: mv ./src-tauri/target/release/bundle/appimage/*.AppImage ./ubuntu-artifacts
+        run: mv ./src-tauri/target/release/bundle/deb/*.deb ./ubuntu-artifacts
+
+      - name: Cache artifacts
+        uses: actions/cache@v3
+        with:
+          path: ./ubuntu-artifacts
+          key: ubuntu-artifacts-cache
+
+
+  # Creates a new release with the Windows and Ubuntu artifacts
+  create-release:
+    needs: [build-windows, build-ubuntu]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      # Restores artifacts from Windows build
+      - name: Restore Windows artifacts
+        id: windows-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ./windows-artifacts
+          key: windows-artifacts-cache
+      - name: Save restores Windows artifacts
+        uses: actions/cache/save@v3
+        with:
+          path: ./windows-artifacts
+          key: ${{ steps.windows-restore.outputs.cache-primary-key }}
+
+      # Restores artifacts from Ubuntu build
+      - name: Restore Ubuntu artifacts
+        id: ubuntu-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: ./ubuntu-artifacts
+          key: ubuntu-artifacts-cache
+      - name: Save restores Ubuntu artifacts
+        uses: actions/cache/save@v3
+        with:
+          path: ./ubuntu-artifacts
+          key: ${{ steps.ubuntu-restore.outputs.cache-primary-key }}
+      
+      # Creates a release
+      # TODO create release with assets
+      - name: Test
+        run: ls -lha
