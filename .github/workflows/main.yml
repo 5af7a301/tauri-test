@@ -2,7 +2,8 @@ name: Release
 
 on:
   push:
-    branches: [ master ]
+    tags:
+      - '*'
 
 jobs:
   # Builds for Windows and caches it's artifacts
