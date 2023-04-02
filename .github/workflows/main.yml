@@ -53,6 +53,7 @@ jobs:
         with:
           path: ./tauri-app/windows-artifacts
           key: windows-artifacts-cache
+          enableCrossOsArchive: true
 
 
   # Builds for Ubuntu and caches it's artifacts
@@ -95,6 +96,7 @@ jobs:
         with:
           path: ./tauri-app/ubuntu-artifacts
           key: ubuntu-artifacts-cache
+          enableCrossOsArchive: true
 
 
   # Creates a new release with the Windows and Ubuntu artifacts
